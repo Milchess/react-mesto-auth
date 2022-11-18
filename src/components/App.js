@@ -9,6 +9,9 @@ import AddPlacePopup from "./AddPlacePopup";
 import ConfirmDeletePlacePopup from "./ConfirmDeletePlacePopup";
 import api from "../utils/api";
 import {CurrentUserContext} from "../contexts/CurrentUserContext";
+import { Route, Switch} from "react-router-dom";
+import Register from "./Register";
+import Login from "./Login";
 
 function App() {
     const [isEditAvatarPopupOpen, setIsEditAvatarPopupOpen] = useState(false);
@@ -120,8 +123,16 @@ function App() {
         <CurrentUserContext.Provider value={currentUser}>
             <div className="page">
                 <div className="page__container">
-
                     <Header/>
+
+                    <Switch>
+                        <Route path="/register">
+                            <Register />
+                        </Route>
+
+                        <Route path="/login">
+                            <Login />
+                        </Route>
 
                     <Main
                         onEditAvatar={handleEditAvatarClick}
@@ -132,6 +143,8 @@ function App() {
                         onCardDelete={handleConfirmPopupClick}
                         cards={cards}
                     />
+
+                    </Switch>
 
                     <Footer/>
 
@@ -160,7 +173,6 @@ function App() {
                         onClose={closeAllPopups}
                         card={selectedCard}
                     />
-
                 </div>
             </div>
         </CurrentUserContext.Provider>
