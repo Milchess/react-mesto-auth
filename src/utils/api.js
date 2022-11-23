@@ -9,6 +9,7 @@ class Api extends React.Component {
             authorization: '38f4a1b9-fdca-415d-86b5-0f7384ead109',
             'Content-Type': 'application/json'
         }
+        this._baseUrlAuth = 'https://auth.nomoreparties.co/';
     }
 
     _get(link) {
@@ -90,6 +91,35 @@ class Api extends React.Component {
         } else {
            return this._delete(`cards/${cardId}/likes`)
         }
+    }
+
+    setRegistration(model) {
+        return fetch(`${this._baseUrlAuth}signup`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(model)
+        })
+            .then((res) => this._getResponseData(res))
+    }
+
+    getAuthorization(model) {
+        return fetch(`${this._baseUrlAuth}signin`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(model)
+        })
+            .then((res) => this._getResponseData(res))
+    }
+
+    getValidationToken() {
+        return fetch(`${this._baseUrlAuth}users/me`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                "Authorization" : `Bearer ${localStorage.getItem('token')}`
+            },
+        })
+            .then((res) => this._getResponseData(res))
     }
 }
 

@@ -9,9 +9,10 @@ import AddPlacePopup from "./AddPlacePopup";
 import ConfirmDeletePlacePopup from "./ConfirmDeletePlacePopup";
 import api from "../utils/api";
 import {CurrentUserContext} from "../contexts/CurrentUserContext";
-import { Route, Switch} from "react-router-dom";
+import {Redirect, Route, Switch, useHistory} from "react-router-dom";
 import Register from "./Register";
 import Login from "./Login";
+import ProtectedRoute from "./ProtectedRoute";
 
 function App() {
     const [isEditAvatarPopupOpen, setIsEditAvatarPopupOpen] = useState(false);
@@ -22,6 +23,10 @@ function App() {
     const [cards, setCards] = useState([]);
     const [isConfirmPopupOpen, setIsConfirmPopupOpen] = useState(false);
     const [card, setCard] = useState(null);
+    const [loggedIn, setLoggedIn] = useState(false);
+    const history = useHistory();
+
+    validAuth();
 
     useEffect(() => {
         Promise.all([api.getInitialCards(), api.getUserInformation()])
@@ -33,6 +38,20 @@ function App() {
                 console.log(`Ошибка.....: ${err}`)
             });
     }, [])
+
+    function validAuth() {
+        if (localStorage.getItem('token')) {
+            api.getValidationToken()
+                .then((data) => {
+                    setLoggedIn(true);
+                    localStorage.setItem('email', data.email);
+                    history.push('/');
+                })
+                .catch(err => {
+                    console.log(`Ошибка.....: ${err}`)
+                });
+        }
+    }
 
     function handleCardLike(card) {
         const isLiked = card.likes.some(i => i._id === currentUser._id);
@@ -118,32 +137,68 @@ function App() {
     function handleCardClick(card) {
         setSelectedCard(card);
     }
+     function handleSignIn(model) {
+        api.getAuthorization(model)
+            .then((data) => {
+                localStorage.setItem('email', model.email);
+                localStorage.setItem('token', data.token);
+                history.push('/');
+            })
+            .catch(err => {
+                console.log(`Ошибка.....: ${err}`)
+            });
+     }
+
+     function handleSignOut() {
+         localStorage.removeItem('email');
+         localStorage.removeItem('token');
+         history.push('/signin');
+     }
+
+     function handleSignUp(model) {
+        api.setRegistration(model)
+            .then(() => history.push('/signin'))
+            .catch(err => {
+                console.log(`Ошибка.....: ${err}`)
+            });
+     }
 
     return (
         <CurrentUserContext.Provider value={currentUser}>
             <div className="page">
                 <div className="page__container">
-                    <Header/>
+                    <Header
+                    signOut={handleSignOut}/>
 
                     <Switch>
-                        <Route path="/register">
-                            <Register />
+                        <Route path="/signin">
+                            <Login
+                                onAuth={handleSignIn}
+                                loggedIn={loggedIn}/>
                         </Route>
 
-                        <Route path="/login">
-                            <Login />
+                        <Route path="/signup">
+                            <Register
+                            loggedIn={loggedIn}
+                            onRegistry={handleSignUp}/>
                         </Route>
 
-                    <Main
-                        onEditAvatar={handleEditAvatarClick}
-                        onEditProfile={handleEditProfileClick}
-                        onAddPlace={handleAddPlaceClick}
-                        onCardClick={handleCardClick}
-                        onCardLike={handleCardLike}
-                        onCardDelete={handleConfirmPopupClick}
-                        cards={cards}
-                    />
+                        <ProtectedRoute
+                            path="/"
+                            loggedIn={loggedIn}
+                            component={Main}
+                            onEditAvatar={handleEditAvatarClick}
+                            onEditProfile={handleEditProfileClick}
+                            onAddPlace={handleAddPlaceClick}
+                            onCardClick={handleCardClick}
+                            onCardLike={handleCardLike}
+                            onCardDelete={handleConfirmPopupClick}
+                            cards={cards}
+                        />
 
+                        <Route exact path="">
+                            {loggedIn ? <Redirect to="/" /> : <Redirect to="/sign-in" />}
+                        </Route>
                     </Switch>
 
                     <Footer/>
