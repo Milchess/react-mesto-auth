@@ -13,6 +13,7 @@ import {Redirect, Route, Switch, useHistory} from "react-router-dom";
 import Register from "./Register";
 import Login from "./Login";
 import ProtectedRoute from "./ProtectedRoute";
+import InfoTooltip from "./InfoTooltip";
 
 function App() {
     const [isEditAvatarPopupOpen, setIsEditAvatarPopupOpen] = useState(false);
@@ -24,9 +25,14 @@ function App() {
     const [isConfirmPopupOpen, setIsConfirmPopupOpen] = useState(false);
     const [card, setCard] = useState(null);
     const [loggedIn, setLoggedIn] = useState(false);
+    const [isInfoTooltipOpen, setIsInfoTooltipOpen] = useState(false);
+    const [email, setEmail] = useState(null);
+    const [tooltipStatus, setTooltipStatus] = useState('success');
     const history = useHistory();
 
-    validAuth();
+    useEffect(() => {
+        validAuth();
+    });
 
     useEffect(() => {
         Promise.all([api.getInitialCards(), api.getUserInformation()])
@@ -42,9 +48,8 @@ function App() {
     function validAuth() {
         if (localStorage.getItem('token')) {
             api.getValidationToken()
-                .then((data) => {
+                .then(() => {
                     setLoggedIn(true);
-                    localStorage.setItem('email', data.email);
                     history.push('/');
                 })
                 .catch(err => {
@@ -132,6 +137,7 @@ function App() {
         setIsAddPlacePopupOpen(false);
         setIsConfirmPopupOpen(false);
         setSelectedCard({name: '', link: ''});
+        setIsInfoTooltipOpen(false);
     }
 
     function handleCardClick(card) {
@@ -140,7 +146,7 @@ function App() {
      function handleSignIn(model) {
         api.getAuthorization(model)
             .then((data) => {
-                localStorage.setItem('email', model.email);
+                setEmail(model.email);
                 localStorage.setItem('token', data.token);
                 history.push('/');
             })
@@ -150,36 +156,42 @@ function App() {
      }
 
      function handleSignOut() {
-         localStorage.removeItem('email');
          localStorage.removeItem('token');
          history.push('/signin');
      }
 
      function handleSignUp(model) {
         api.setRegistration(model)
-            .then(() => history.push('/signin'))
+            .then(() => {
+                setTooltipStatus('success');
+                history.push('/signin');
+            })
             .catch(err => {
+                setTooltipStatus('fail');
                 console.log(`Ошибка.....: ${err}`)
-            });
+            }).finally(handleInfoTooltip);
      }
+
+    function handleInfoTooltip() {
+        setIsInfoTooltipOpen(true);
+    }
 
     return (
         <CurrentUserContext.Provider value={currentUser}>
             <div className="page">
                 <div className="page__container">
                     <Header
-                    signOut={handleSignOut}/>
+                    signOut={handleSignOut}
+                    email={email}/>
 
                     <Switch>
                         <Route path="/signin">
                             <Login
-                                onAuth={handleSignIn}
-                                loggedIn={loggedIn}/>
+                                onAuth={handleSignIn}/>
                         </Route>
 
                         <Route path="/signup">
                             <Register
-                            loggedIn={loggedIn}
                             onRegistry={handleSignUp}/>
                         </Route>
 
@@ -199,6 +211,7 @@ function App() {
                         <Route exact path="">
                             {loggedIn ? <Redirect to="/" /> : <Redirect to="/sign-in" />}
                         </Route>
+
                     </Switch>
 
                     <Footer/>
@@ -227,6 +240,12 @@ function App() {
                     <ImagePopup
                         onClose={closeAllPopups}
                         card={selectedCard}
+                    />
+
+                    <InfoTooltip
+                        isOpen={isInfoTooltipOpen}
+                        onClose={closeAllPopups}
+                        tooltipStatus={tooltipStatus}
                     />
                 </div>
             </div>

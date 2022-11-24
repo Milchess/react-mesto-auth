@@ -1,25 +1,23 @@
 import React from "react";
-import PopupWithForm from "./PopupWithForm";
+import goodImg from '../images/goodRegistration.svg';
+import badImg from '../images/badRegistration.svg';
 
-function InfoTooltip(props) {
-    return(
-        <>
-            <PopupWithForm
-                name="popupRegistrationGood"
-                isOpen={props.isOpen}
-                onClose={props.onClose}>
-                <img src='../images/goodRegistration.svg' className='popup-registration__image' alt='Успешная регистрация'></img>
-                <p className='popup-registration__text'>Вы успешно зарегистрировались!</p>
-            </PopupWithForm>
-            <PopupWithForm
-                name="popupRegistrationBad"
-                isOpen={props.isOpen}
-                onClose={props.onClose}>
-                <img src='../images/badRegistration.svg' className='popup-registration__image' alt='Ошибка! Попробуйте еще раз'></img>
-                <p className='popup-registration__text'>Что-то пошло не так!</p>
-                <p className='popup-registration__text'>Попробуйте еще раз.</p>
-            </PopupWithForm>
-        </>
+function InfoTooltip({tooltipStatus, onClose, isOpen}) {
+    const icon = tooltipStatus === 'success' ? `${goodImg}` : `${badImg}`;
+    const text = tooltipStatus === 'success' ? 'Вы успешно зарегистрировались!' : 'Что-то пошло не так! Попробуйте еще раз.';
+
+    return (
+            <div className={`popup ${isOpen ? "popup_opened" : ""}`}>
+                <div className='popup__container-tooltip'>
+                    <img src={icon} className='popup-registration__image' alt={text}></img>
+                    <p className='popup-registration__text'>{text}</p>
+                    <button
+                        aria-label="Закрыть"
+                        className="popup__button-close"
+                        type="button"
+                        onClick={onClose}></button>
+                </div>
+            </div>
     )
 }
 

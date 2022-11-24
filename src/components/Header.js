@@ -11,7 +11,7 @@ function Header(props) {
     } else if (location.pathname === '/signup') {
         navBar = <Link to="/signin" className='header__link'>Войти</Link>
     } else {
-        navBar = <div className='header__container'><p className='header__email'>{localStorage.getItem('email')}</p><Link to="/signin" onClick={props.signOut} className='header__link'>Выйти</Link></div>
+        navBar = <div className='header__container'><p className='header__email'>{props.email}</p><Link to="/signin" onClick={props.signOut} className='header__link'>Выйти</Link></div>
     }
 
     return (
