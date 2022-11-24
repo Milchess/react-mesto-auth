@@ -7,11 +7,11 @@ function Header(props) {
     let navBar;
 
     if (location.pathname === '/signin') {
-        navBar = <Link to="/signup">Регистрация</Link>
+        navBar = <Link to="/signup" className='header__link'>Регистрация</Link>
     } else if (location.pathname === '/signup') {
-        navBar = <Link to="/signin">Войти</Link>
+        navBar = <Link to="/signin" className='header__link'>Войти</Link>
     } else {
-        navBar = <div><p>{localStorage.getItem('email')}</p><Link to="/signin" onClick={props.signOut}>Выйти</Link></div>
+        navBar = <div className='header__container'><p className='header__email'>{localStorage.getItem('email')}</p><Link to="/signin" onClick={props.signOut} className='header__link'>Выйти</Link></div>
     }
 
     return (
