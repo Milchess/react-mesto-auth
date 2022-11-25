@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import Header from './Header';
 import Main from "./Main";
 import Footer from "./Footer";
@@ -30,26 +30,26 @@ function App() {
     const [tooltipStatus, setTooltipStatus] = useState('success');
     const history = useHistory();
 
-    useEffect(() => {
-        validAuth();
-    });
+    useEffect(validAuth, []);
 
     useEffect(() => {
-        Promise.all([api.getInitialCards(), api.getUserInformation()])
-            .then(([cards, user]) => {
-                setCards(cards);
-                setCurrentUser(user);
-            })
-            .catch(err => {
-                console.log(`Ошибка.....: ${err}`)
-            });
-    }, [])
+        if (loggedIn)
+            Promise.all([api.getInitialCards(), api.getUserInformation()])
+                .then(([cards, user]) => {
+                    setCards(cards);
+                    setCurrentUser(user);
+                })
+                .catch(err => {
+                    console.log(`Ошибка.....: ${err}`)
+                });
+    }, [loggedIn])
 
     function validAuth() {
         if (localStorage.getItem('token')) {
             api.getValidationToken()
-                .then(() => {
+                .then((res) => {
                     setLoggedIn(true);
+                    setEmail(res.data.email);
                     history.push('/');
                 })
                 .catch(err => {
@@ -63,11 +63,11 @@ function App() {
 
         api.changeLikeCardStatus(card._id, !isLiked)
             .then((newCard) => {
-            setCards((state) => state.map((c) => c._id === card._id ? newCard : c));
-        })
+                setCards((state) => state.map((c) => c._id === card._id ? newCard : c));
+            })
             .catch(err => {
-            console.log(`Ошибка.....: ${err}`)
-        });
+                console.log(`Ошибка.....: ${err}`)
+            });
     }
 
     function handleCardDelete(card) {
@@ -77,8 +77,8 @@ function App() {
                 closeAllPopups();
             })
             .catch(err => {
-            console.log(`Ошибка.....: ${err}`)
-        });
+                console.log(`Ошибка.....: ${err}`)
+            });
     }
 
     function handleUpdateUser(item) {
@@ -143,24 +143,28 @@ function App() {
     function handleCardClick(card) {
         setSelectedCard(card);
     }
-     function handleSignIn(model) {
+
+    function handleSignIn(model) {
         api.getAuthorization(model)
             .then((data) => {
+                setLoggedIn(true);
                 setEmail(model.email);
                 localStorage.setItem('token', data.token);
                 history.push('/');
             })
             .catch(err => {
+                handleInfoTooltip();
+                setTooltipStatus('fail');
                 console.log(`Ошибка.....: ${err}`)
-            });
-     }
+            })
+    }
 
-     function handleSignOut() {
-         localStorage.removeItem('token');
-         history.push('/signin');
-     }
+    function handleSignOut() {
+        localStorage.removeItem('token');
+        history.push('/signin');
+    }
 
-     function handleSignUp(model) {
+    function handleSignUp(model) {
         api.setRegistration(model)
             .then(() => {
                 setTooltipStatus('success');
@@ -170,7 +174,7 @@ function App() {
                 setTooltipStatus('fail');
                 console.log(`Ошибка.....: ${err}`)
             }).finally(handleInfoTooltip);
-     }
+    }
 
     function handleInfoTooltip() {
         setIsInfoTooltipOpen(true);
@@ -181,8 +185,8 @@ function App() {
             <div className="page">
                 <div className="page__container">
                     <Header
-                    signOut={handleSignOut}
-                    email={email}/>
+                        signOut={handleSignOut}
+                        email={email}/>
 
                     <Switch>
                         <Route path="/signin">
@@ -192,11 +196,11 @@ function App() {
 
                         <Route path="/signup">
                             <Register
-                            onRegistry={handleSignUp}/>
+                                onRegistry={handleSignUp}/>
                         </Route>
 
                         <ProtectedRoute
-                            path="/"
+                            exact path="/"
                             loggedIn={loggedIn}
                             component={Main}
                             onEditAvatar={handleEditAvatarClick}
@@ -209,7 +213,7 @@ function App() {
                         />
 
                         <Route exact path="">
-                            {loggedIn ? <Redirect to="/" /> : <Redirect to="/sign-in" />}
+                            {loggedIn ? <Redirect to="/"/> : <Redirect to="/sign-in"/>}
                         </Route>
 
                     </Switch>
